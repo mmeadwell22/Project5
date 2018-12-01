@@ -78,16 +78,16 @@ int main()
             /// Loop through each command in the command list and set the pipe flags accordingly.
             for(int j = 0; j < command_list.count; j++){
                 if(j == 0){ /// Only redirect stdout
-                    //linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 0, 1);
+                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 0, 1);
                 }
                 else if (j == 1 && command_list.count == 3 ){ /// Redirect both stdin & stdout
-                    //linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 1);
+                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 1);
                 }
                 else if( j == 1 && command_list.count == 2){ /// Only redirect stdin
-                    //linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
+                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
                 }
                 else if( j == 2){ /// Only redirect stdin
-                    //linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
+                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
                 }
             }
 
@@ -96,49 +96,44 @@ int main()
             /// Hanging pipe character detected.
             printf("please re-try your command");
             break;
-        }
+        } else {
 
-        arglist[0] = strtok(argbuf, " ");
-        numOfArgs = 1;
-        strcpy(command, arglist[0]);
-        //first argument contains command
-        i = 1;
-        //rest of the command line arguments
-        int tempcount = 0;
-        while (numOfArgs < MAXARGS)
-        {
-            token = strtok(NULL, " ");
-            if (token == NULL)
-            {
-                tempcount++;
+            arglist[0] = strtok(argbuf, " ");
+            numOfArgs = 1;
+            strcpy(command, arglist[0]);
+            //first argument contains command
+            i = 1;
+            //rest of the command line arguments
+            int tempcount = 0;
+            while (numOfArgs < MAXARGS) {
+                token = strtok(NULL, " ");
+                if (token == NULL) {
+                    tempcount++;
+                }
+                arglist[i] = token;
+                numOfArgs++;
+                i++;
             }
-            arglist[i] = token;
-            numOfArgs++;
-            i++;
-        }
-        switch (getInput(command))
-        {
-        case 1:
-            cd(arglist);
-            memset(arglist, 0, sizeof(argbuf));
-            break;
-        case 2:
-            head = path(arglist, head);
-            memset(arglist, 0, sizeof(argbuf));
-            break;
-        case 3:
-            q = quitShell();
-            exit(1);
-            break;
-        default:
-            if (argbuf[0] == '\n')
-            {
-                
-            }
-            else
-            {
-                int total = numOfArgs - tempcount;
-                linCommand(arglist, head, total, thepipe, 0, 0);
+            switch (getInput(command)) {
+                case 1:
+                    cd(arglist);
+                    memset(arglist, 0, sizeof(argbuf));
+                    break;
+                case 2:
+                    head = path(arglist, head);
+                    memset(arglist, 0, sizeof(argbuf));
+                    break;
+                case 3:
+                    q = quitShell();
+                    exit(1);
+                    break;
+                default:
+                    if (argbuf[0] == '\n') {
+
+                    } else {
+                        int total = numOfArgs - tempcount;
+                        linCommand(arglist, head, total, thepipe, 0, 0);
+                    }
             }
         }
     }
