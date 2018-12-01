@@ -66,7 +66,7 @@ myNode *path(char *arglist[], myNode *head)
     {
         printPath(head);
     }
-    else if (strstr(arglist[1], "+") == arglist[1])
+    else if (strstr(arglist[1], "+") == arglist[1] && arglist[2] != NULL)
     {
         current = head;
         myNode *temp;
@@ -88,7 +88,7 @@ myNode *path(char *arglist[], myNode *head)
             current->next = temp;
         }
     }
-    else if (strstr(arglist[1], "-") == arglist[1])
+    else if (strstr(arglist[1], "-") == arglist[1] && arglist[2] != NULL)
     {
         equals(arglist[2], head, &head);
     }
@@ -109,8 +109,10 @@ void printPrompt()
     printf("%s $ ", cwd);
 }
 
-void linCommand(char *arglist[], myNode *head, int numOfArgs)
+void linCommand(char *arglist[], myNode *head, int numOfArgs, int* thepipe, int pipeIn, int pipeOut)
 {
+    /// TODO: According to the values of the pipeIn / pipeOut flags
+    /// close the appropriate end of the pipe. Use dup to redirect stdin.
     pid = fork();
     if (pid == -1)
     {
@@ -143,6 +145,7 @@ void linCommand(char *arglist[], myNode *head, int numOfArgs)
                 list[i] = arglist[i];
             }
             list[i] = NULL;
+
             execv(command, list);
         }
         //list has multiple entries
@@ -253,5 +256,72 @@ void getLength(myNode *head)
     {
         count = count->next;
         lengthList++;
+    }
+}
+
+int scanForPipes(const char *input)
+{
+    /// loop through input and count the number of pipes
+    int pipeCount = 0;
+    int i = 0;
+    for(; input[i] != 0; i++ ){
+        if( input[i] == '|'){
+            pipeCount ++;
+        }
+    }
+    if(input[i-1] == '|'){
+        return -1;
+    }
+    return pipeCount;
+}
+
+int buildCommandList(commands_t * command_list, char * input)
+{
+    char *token;
+    int command_count = 0;
+    token = strtok(input, "|");
+    while(token != NULL){
+        char temp[ARGLENGTH];
+        strcpy(temp, token);
+        char *subtoken = temp;
+        int argc = 0;
+
+        /// Count number of command arguments
+        for(int i = 0; i < strlen(subtoken) - 1; i++) {
+            if( subtoken[i] == ' '){
+                argc++;
+            }
+        }
+
+        /// Build list of arguments for each of the commands
+        command_list->numOfArgs[command_count] = argc + 1;
+        command_list->command[command_count] = (char **) calloc((size_t) argc+1, sizeof(char *));
+
+        subtoken = strtok(subtoken, " ");
+            for(int i = 0; i <= argc ; ++i) {
+                if( subtoken == NULL){break;}
+                if( strlen(subtoken)) {
+                    char *temp = calloc(strlen(subtoken) + 1, sizeof(char));
+                    if( temp != NULL){
+                        command_list->command[command_count][i] = temp;
+                    }
+                    strncpy(command_list->command[command_count][i], subtoken, strlen(subtoken));
+                    subtoken = strtok(NULL, " ");
+                    }
+                }
+
+        if(command_count == command_list->count - 1){
+            token = strtok(token, "\0");
+        } else{
+            token = strtok(token, "|");
+        }
+    }
+
+    return command_count;
+}
+
+void createPipe(int thepipe[2]){
+    if( pipe(thepipe) == -1){
+        perror("Pipe Failed");
     }
 }
