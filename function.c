@@ -277,18 +277,19 @@ int scanForPipes(const char *input)
 
 int buildCommandList(commands_t * command_list, char * input)
 {
+    char input_cp[strlen(input)];
+    strcpy(input_cp, input);
     char *token;
     int command_count = 0;
-    token = strtok(input, "|");
+    size_t char_count = 0;
+    token = strtok(input_cp, "|");
+    char_count += strlen(token) +1;
     while(token != NULL){
-        char temp[ARGLENGTH];
-        strcpy(temp, token);
-        char *subtoken = temp;
         int argc = 0;
 
         /// Count number of command arguments
-        for(int i = 0; i < strlen(subtoken) - 1; i++) {
-            if( subtoken[i] == ' '){
+        for(int i = 1; i < strlen(token) - 1; i++) {
+            if( token[i] == ' '){
                 argc++;
             }
         }
@@ -296,27 +297,30 @@ int buildCommandList(commands_t * command_list, char * input)
         /// Build list of arguments for each of the commands
         command_list->numOfArgs[command_count] = argc + 1;
         command_list->command[command_count] = (char **) calloc((size_t) argc+1, sizeof(char *));
-
-        subtoken = strtok(subtoken, " ");
-            for(int i = 0; i <= argc ; ++i) {
-                if( subtoken == NULL){break;}
-                if( strlen(subtoken)) {
-                    char *temp = calloc(strlen(subtoken) + 1, sizeof(char));
-                    if( temp != NULL){
-                        command_list->command[command_count][i] = temp;
-                    }
-                    strncpy(command_list->command[command_count][i], subtoken, strlen(subtoken));
-                    subtoken = strtok(NULL, " ");
-                    }
+        token = strtok(token, " ");
+        for(int i = 0; i <= argc ; ++i) {
+            if( token == NULL){break;}
+            if( strlen(token)) {
+                char *temp = calloc(strlen(token) + 1, sizeof(char));
+                if( temp != NULL){
+                    command_list->command[command_count][i] = temp;
                 }
-
+                strncpy(command_list->command[command_count][i], token, strlen(token));
+                token = strtok(NULL, " ");
+                }
+            }
+        command_count++;
+        /// Parse input for next command
         if(command_count == command_list->count - 1){
-            token = strtok(token, "\0");
+            token = strtok(&input_cp[char_count], "\0");
+        }
+        else if( command_count < command_list->count - 1){
+            token = strtok(&input_cp[char_count], "|");
+            char_count += strlen(token) + 1;
         } else{
-            token = strtok(token, "|");
+            break;
         }
     }
-
     return command_count;
 }
 
