@@ -70,8 +70,6 @@ int main()
             command_list.command = (char ***) calloc((size_t) pipeCount + 1, sizeof(char **));
             command_list.count = pipeCount + 1;
             command_list.numOfArgs = (int *) calloc((size_t) pipeCount + 1, sizeof(int));
-            /// @mmeadwell22 I am still trying to get this function to properly organize the user input.
-            /// you can proceed with the writing the code and assume that it works.
 
             buildCommandList(&command_list, argbuf);
             createPipe(thepipe);
@@ -90,13 +88,14 @@ int main()
                     linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
                 }
             }
-
+            garbageCollectCommandList(&command_list);
         }
         else if (pipeCount == -1){
             /// Hanging pipe character detected.
-            printf("please re-try your command");
-            break;
-        } else {
+            printf("please re-try your command\n");
+            continue;
+        }
+        else if (pipeCount == 0) {
 
             arglist[0] = strtok(argbuf, " ");
             numOfArgs = 1;
