@@ -24,13 +24,14 @@
     /// thePipe is a pair of fd's created by pipe system call.
     /// pipeIn flag tells linCommand whether or not to redirect stdin.
     /// pipeOut flag tells linCommand whether or not to redirect stdout.
-    void linCommand(char *[], myNode *, int, int* thePipe, int pipeIn, int pipeOut);
+    int linCommand(char *[], myNode *, int, int pipeCount, int* thePipe, int pipeIn, int pipeOut);
     void printPrompt();
     void equals(char *, myNode *, myNode **);
     void printPath(myNode *);
     void getLength(myNode *);
     int scanForPipes(const char *);
     int buildCommandList(commands_t *, char *);
+    int garbageCollectCommandList(commands_t *);
     void createPipe(int*);
 
 #endif

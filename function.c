@@ -109,7 +109,9 @@ void printPrompt()
     printf("%s $ ", cwd);
 }
 
-void linCommand(char *arglist[], myNode *head, int numOfArgs, int *thepipe, int pipeIn, int pipeOut)
+
+int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int* thepipe, int pipeIn, int pipeOut)
+
 {
     /// TODO: According to the values of the pipeIn / pipeOut flags
     /// close the appropriate end of the pipe. Use dup to redirect stdin.
@@ -140,7 +142,48 @@ void linCommand(char *arglist[], myNode *head, int numOfArgs, int *thepipe, int 
     }
     else if (pid == 0)
     {
-        //child process
+
+        if( pipeCount == 1){
+            // read end of pipe is thepipe[0]
+            // write end of pipe is thepipe[1]
+
+            if (pipeIn == 0 && pipeOut == 1){ //sender
+                close(thepipe[0]);
+                dup2(thepipe[1], 1);
+                close(thepipe[1]);
+            }
+            else if(pipeIn == 1 && pipeOut == 0){ //receiver
+                dup2(thepipe[0], 0);
+                close(thepipe[0]);
+            }
+        }
+        if( pipeCount == 2){
+            // read end of pipe 1 is thepipe[0]
+            // write end of pipe 1 is thepipe[1]
+
+            // read end of pipe 2 is thepipe[2]
+            // write end of pipe 2 is the pipe[3]
+
+            if (pipeIn == 0 && pipeOut == 1){ //sender
+                close(thepipe[0]);
+                close(thepipe[2]);
+                close(thepipe[3]);
+                dup2(thepipe[1], 1);
+                close(thepipe[1]);
+            }
+            else if(pipeIn == 1 && pipeOut == 1){ //intermediate
+                close(thepipe[2]);
+                dup2(thepipe[0], 0);
+                dup2(thepipe[3], 1);
+                close(thepipe[0]);
+                close(thepipe[3]);
+            }
+            else if(pipeIn == 1 && pipeOut == 0){ //receiver
+                dup2(thepipe[2], 0);
+                close(thepipe[2]);
+            }
+        }
+
 
         if (head == NULL)
         {
@@ -203,10 +246,14 @@ void linCommand(char *arglist[], myNode *head, int numOfArgs, int *thepipe, int 
     }
     else
     {
-        wait(&status);
+
+        while(wait(&status) != pid){
+            return 0;
+        }
 
         //printf("command not found\n");
     }
+    return 0;
 }
 
 void equals(char *arg, myNode *head, myNode **headRef)
@@ -373,4 +420,16 @@ void createPipe(int thepipe[2])
     {
         perror("Pipe Failed");
     }
+}
+
+int garbageCollectCommandList(commands_t * commands){
+    for(size_t i = 0; i < commands->count; i++){
+        for(int j = 0; j < commands->numOfArgs[i]; j++){
+            free(commands->command[i][j]);
+        }
+        free(commands->command[i]);
+    }
+    free(commands->command);
+    free(commands->numOfArgs);
+    return 0;
 }
