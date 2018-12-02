@@ -31,6 +31,7 @@
     void getLength(myNode *);
     int scanForPipes(const char *);
     int buildCommandList(commands_t *, char *);
+    int garbageCollectCommandList(commands_t *);
     void createPipe(int*);
 
 #endif

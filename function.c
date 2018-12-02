@@ -375,3 +375,15 @@ void createPipe(int thepipe[2]){
         perror("Pipe Failed");
     }
 }
+
+int garbageCollectCommandList(commands_t * commands){
+    for(size_t i = 0; i < commands->count; i++){
+        for(int j = 0; j < commands->numOfArgs[i]; j++){
+            free(commands->command[i][j]);
+        }
+        free(commands->command[i]);
+    }
+    free(commands->command);
+    free(commands->numOfArgs);
+    return 0;
+}
