@@ -42,6 +42,8 @@ int main()
     memset(arglist, 0, sizeof(arglist));
     commands_t command_list;
     int thepipe[2]; /// Holds two fd's for piping.
+    int stdin_cp = dup(0);
+    int stdout_cp = dup(1);
 
     while (q)
     {
@@ -76,17 +78,22 @@ int main()
             buildCommandList(&command_list, argbuf);
             createPipe(thepipe);
             /// Loop through each command in the command list and set the pipe flags accordingly.
-            for(int j = 0; j < command_list.count; j++){
+            int j;
+            for(j = 0; j < command_list.count; j++){
                 if(j == 0){ /// Only redirect stdout
+                    printf("redirect stdout\n");
                     linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 0, 1);
                 }
                 else if (j == 1 && command_list.count == 3 ){ /// Redirect both stdin & stdout
+                    printf("redirect both\n");
                     linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 1);
                 }
                 else if( j == 1 && command_list.count == 2){ /// Only redirect stdin
+                    printf("redirect stdin\n");
                     linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
                 }
                 else if( j == 2){ /// Only redirect stdin
+                    printf("redirect stdin second case\n");
                     linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
                 }
             }
@@ -94,7 +101,7 @@ int main()
         }
         else if (pipeCount == -1){
             /// Hanging pipe character detected.
-            printf("please re-try your command");
+            printf("please re-try your command\n");
             break;
         } else {
 
@@ -133,6 +140,10 @@ int main()
                     } else {
                         int total = numOfArgs - tempcount;
                         linCommand(arglist, head, total, thepipe, 0, 0);
+                        close(0);
+                        close(1);
+                        dup2(stdin_cp, 0);
+                        dup2(stdout_cp, 1);
                     }
             }
         }
