@@ -112,9 +112,13 @@ void printPrompt()
 
 int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int* thepipe, int pipeIn, int pipeOut)
 {
-    /// TODO: According to the values of the pipeIn / pipeOut flags
-    /// close the appropriate end of the pipe. Use dup to redirect stdin.
-        int m;
+    int m;
+    if (head == NULL)
+    {
+        printf("Path variable is empty please add a path to continue.\n");
+        return 0;
+    }
+
         for (m = 0; m < numOfArgs - 1; m++)
         {
             if (strstr(arglist[m], ">") == arglist[m])
@@ -140,58 +144,59 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
     }
     else if (pid == 0)
     {
-        if( pipeCount == 1){
+        if (pipeCount == 1)
+        {
             // read end of pipe is thepipe[0]
             // write end of pipe is thepipe[1]
 
-            if (pipeIn == 0 && pipeOut == 1){ //sender
+            if (pipeIn == 0 && pipeOut == 1) //sender
+            {
                 close(thepipe[0]);
                 dup2(thepipe[1], 1);
                 close(thepipe[1]);
             }
-            else if(pipeIn == 1 && pipeOut == 0){ //receiver
+            else if(pipeIn == 1 && pipeOut == 0) //receiver
+            {
                 dup2(thepipe[0], 0);
                 close(thepipe[0]);
             }
         }
-        if( pipeCount == 2){
+        if (pipeCount == 2)
+        {
             // read end of pipe 1 is thepipe[0]
             // write end of pipe 1 is thepipe[1]
 
             // read end of pipe 2 is thepipe[2]
             // write end of pipe 2 is the pipe[3]
 
-            if (pipeIn == 0 && pipeOut == 1){ //sender
+            if (pipeIn == 0 && pipeOut == 1) //sender
+            {
                 close(thepipe[0]);
                 close(thepipe[2]);
                 close(thepipe[3]);
                 dup2(thepipe[1], 1);
                 close(thepipe[1]);
             }
-            else if(pipeIn == 1 && pipeOut == 1){ //intermediate
+            else if (pipeIn == 1 && pipeOut == 1) //intermediate
+            {
                 close(thepipe[2]);
                 dup2(thepipe[0], 0);
                 dup2(thepipe[3], 1);
                 close(thepipe[0]);
                 close(thepipe[3]);
             }
-            else if(pipeIn == 1 && pipeOut == 0){ //receiver
+            else if (pipeIn == 1 && pipeOut == 0) //receiver
+            {
                 dup2(thepipe[2], 0);
                 close(thepipe[2]);
             }
         }
 
-
-        if (head == NULL)
-        {
-            printf("Path variable is empty please add a path to continue.\n");
-            exit(1);
-        }
         //list only has one entry
         if (head->next == NULL)
         {
             int i;
-            //list only has one entry
+            /// @mmeadwell22 Did you intend `` char *command = malloc(ARGLENGTH) `` ?
             char *command = malloc(sizeof(ARGLENGTH));
             if (head->path[strlen(head->path) - 1] == '\n')
             {
@@ -204,7 +209,7 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
             list[0] = command;
             for (i = 1; i < numOfArgs; i++)
             {
-                if (strcmp(arglist[i], ">") == 0)
+                if (strcmp(arglist[i], ">") == 0 || strcmp(arglist[i], "<") == 0)
                 {
                     list[i] = '\0';
                     break;
@@ -219,7 +224,11 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
         int i;
         for (i = 0; i <= lengthList; i++)
         {
+            /// @mmeadwell22 The, i, variable declaration below (@line229) hides the previous one (declared @line224).
+            /// I am pretty sure, but not certain that you can/should remove @line229.
             int i;
+
+            /// @mmeadwell22 Did you intend `` char *command = malloc(ARGLENGTH) `` ?
             char *command = malloc(sizeof(ARGLENGTH));
             if (head->path[strlen(head->path) - 1] == '\n')
             {
@@ -232,7 +241,7 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
             list[0] = command;
             for (i = 1; i < numOfArgs; i++)
             {
-                if (strcmp(arglist[i], ">") == 0)
+                if (strcmp(arglist[i], ">") == 0 || strcmp(arglist[i], "<") == 0)
                 {
                     list[i] = '\0';
                     break;
@@ -423,9 +432,12 @@ void createPipe(int thepipe[2])
     }
 }
 
-int garbageCollectCommandList(commands_t * commands){
-    for(size_t i = 0; i < commands->count; i++){
-        for(int j = 0; j < commands->numOfArgs[i]; j++){
+int garbageCollectCommandList(commands_t * commands)
+{
+    for (size_t i = 0; i < commands->count; i++)
+    {
+        for (int j = 0; j < commands->numOfArgs[i]; j++)
+        {
             free(commands->command[i][j]);
         }
         free(commands->command[i]);
