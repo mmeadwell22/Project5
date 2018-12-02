@@ -1,3 +1,4 @@
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -109,13 +110,10 @@ void printPrompt()
     printf("%s $ ", cwd);
 }
 
-
 int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int* thepipe, int pipeIn, int pipeOut)
-
 {
     /// TODO: According to the values of the pipeIn / pipeOut flags
     /// close the appropriate end of the pipe. Use dup to redirect stdin.
-        printf("num of args is %d\n", numOfArgs);
         int m;
         for (m = 0; m < numOfArgs - 1; m++)
         {
@@ -142,7 +140,6 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
     }
     else if (pid == 0)
     {
-
         if( pipeCount == 1){
             // read end of pipe is thepipe[0]
             // write end of pipe is thepipe[1]
@@ -235,6 +232,11 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
             list[0] = command;
             for (i = 1; i < numOfArgs; i++)
             {
+                if (strcmp(arglist[i], ">") == 0)
+                {
+                    list[i] = '\0';
+                    break;
+                }
                 list[i] = arglist[i];
             }
             list[i] = NULL;
@@ -246,7 +248,6 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
     }
     else
     {
-
         while(wait(&status) != pid){
             return 0;
         }
@@ -433,3 +434,4 @@ int garbageCollectCommandList(commands_t * commands){
     free(commands->numOfArgs);
     return 0;
 }
+
