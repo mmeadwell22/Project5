@@ -33,5 +33,6 @@
     int buildCommandList(commands_t *, char *);
     int garbageCollectCommandList(commands_t *);
     void createPipe(int*);
+    int remove_redirection_chars(char ***, char **[MAXARGS + 1], int);
 
 #endif
