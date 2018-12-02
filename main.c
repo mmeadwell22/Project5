@@ -41,7 +41,6 @@ int main()
     head = NULL;
     memset(arglist, 0, sizeof(arglist));
     commands_t command_list;
-    int thepipe[2]; /// Holds two fd's for piping.
 
     while (q)
     {
@@ -74,24 +73,27 @@ int main()
             /// you can proceed with the writing the code and assume that it works.
 
             buildCommandList(&command_list, argbuf);
-            createPipe(thepipe);
-            /// Loop through each command in the command list and set the pipe flags accordingly.
-            for(int j = 0; j < command_list.count; j++){
-                if(j == 0){ /// Only redirect stdout
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 0, 1);
-                }
-                else if (j == 1 && command_list.count == 3 ){ /// Redirect both stdin & stdout
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 1);
-                }
-                else if( j == 1 && command_list.count == 2){ /// Only redirect stdin
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
-                }
-                else if( j == 2){ /// Only redirect stdin
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
-                }
+            if(pipeCount == 1){ /// One pipe
+                int thepipe[2]; /// Holds two fd's for piping.
+                createPipe(thepipe);
+                linCommand(command_list.command[0], head, command_list.numOfArgs[0], pipeCount, thepipe, 0, 1);
+                close(thepipe[1]);
+                linCommand(command_list.command[1], head, command_list.numOfArgs[1], pipeCount, thepipe, 1, 0);
+                close(thepipe[0]);
             }
-
-        }
+            else if (pipeCount == 2 ){ /// Two pipes
+                int thepipe[4]; /// Holds four fd's for piping.
+                createPipe(thepipe);
+                createPipe(&thepipe[2]);
+                linCommand(command_list.command[0], head, command_list.numOfArgs[0], pipeCount, thepipe, 0, 1);
+                close(thepipe[1]);
+                linCommand(command_list.command[1], head, command_list.numOfArgs[1], pipeCount, thepipe, 1, 1);
+                close(thepipe[0]);
+                close(thepipe[3]);
+                linCommand(command_list.command[2], head, command_list.numOfArgs[2], pipeCount, thepipe, 1, 0);
+                close(thepipe[2]);
+            }
+            }
         else if (pipeCount == -1){
             /// Hanging pipe character detected.
             printf("please re-try your command");
@@ -132,7 +134,9 @@ int main()
 
                     } else {
                         int total = numOfArgs - tempcount;
-                        linCommand(arglist, head, total, thepipe, 0, 0);
+                        int *thepipe = NULL;
+                        pipeCount = 0;
+                        linCommand(arglist, head, total, pipeCount, thepipe, 0, 0);
                     }
             }
         }
