@@ -41,22 +41,24 @@ int main()
     head = NULL;
     memset(arglist, 0, sizeof(arglist));
     commands_t command_list;
-    int thepipe[2]; /// Holds two fd's for piping.
     int stdin_cp = dup(0);
     int stdout_cp = dup(1);
 
     while (q)
     {
+        close(0);
+        close(1);
+        dup2(stdin_cp, 0);
+        dup2(stdout_cp, 1);
         printPrompt();
         getline(&argbuf, &in, stdin);
-        if(argbuf[0] == '\n')
+        if (argbuf[0] == '\n')
         {
-
         }
         else
         {
             char *holder = strchr(argbuf, '\n');
-            if(holder)
+            if (holder)
             {
                 *holder = 0;
             }
@@ -68,42 +70,46 @@ int main()
         /// 1) Build a list of the commands that need to be executed.
         /// 2) Create pipe.
         /// 3) Run modified linCommand
-        if(pipeCount > 0){
-            command_list.command = (char ***) calloc((size_t) pipeCount + 1, sizeof(char **));
+        if (pipeCount > 0)
+        {
+            command_list.command = (char ***)calloc((size_t)pipeCount + 1, sizeof(char **));
             command_list.count = pipeCount + 1;
-            command_list.numOfArgs = (int *) calloc((size_t) pipeCount + 1, sizeof(int));
+            command_list.numOfArgs = (int *)calloc((size_t)pipeCount + 1, sizeof(int));
             /// @mmeadwell22 I am still trying to get this function to properly organize the user input.
             /// you can proceed with the writing the code and assume that it works.
 
             buildCommandList(&command_list, argbuf);
-            createPipe(thepipe);
-            /// Loop through each command in the command list and set the pipe flags accordingly.
-            int j;
-            for(j = 0; j < command_list.count; j++){
-                if(j == 0){ /// Only redirect stdout
-                    printf("redirect stdout\n");
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 0, 1);
-                }
-                else if (j == 1 && command_list.count == 3 ){ /// Redirect both stdin & stdout
-                    printf("redirect both\n");
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 1);
-                }
-                else if( j == 1 && command_list.count == 2){ /// Only redirect stdin
-                    printf("redirect stdin\n");
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
-                }
-                else if( j == 2){ /// Only redirect stdin
-                    printf("redirect stdin second case\n");
-                    linCommand(command_list.command[j], head, command_list.numOfArgs[j], thepipe, 1, 0);
-                }
+            if (pipeCount == 1)
+            {                   /// One pipe
+                int thepipe[2]; /// Holds two fd's for piping.
+                createPipe(thepipe);
+                linCommand(command_list.command[0], head, command_list.numOfArgs[0], pipeCount, thepipe, 0, 1);
+                close(thepipe[1]);
+                linCommand(command_list.command[1], head, command_list.numOfArgs[1], pipeCount, thepipe, 1, 0);
+                close(thepipe[0]);
             }
-
+            else if (pipeCount == 2)
+            {                   /// Two pipes
+                int thepipe[4]; /// Holds four fd's for piping.
+                createPipe(thepipe);
+                createPipe(&thepipe[2]);
+                linCommand(command_list.command[0], head, command_list.numOfArgs[0], pipeCount, thepipe, 0, 1);
+                close(thepipe[1]);
+                linCommand(command_list.command[1], head, command_list.numOfArgs[1], pipeCount, thepipe, 1, 1);
+                close(thepipe[0]);
+                close(thepipe[3]);
+                linCommand(command_list.command[2], head, command_list.numOfArgs[2], pipeCount, thepipe, 1, 0);
+                close(thepipe[2]);
+            }
         }
-        else if (pipeCount == -1){
+        else if (pipeCount == -1)
+        {
             /// Hanging pipe character detected.
-            printf("please re-try your command\n");
+            printf("please re-try your command");
             break;
-        } else {
+        }
+        else
+        {
 
             arglist[0] = strtok(argbuf, " ");
             numOfArgs = 1;
@@ -112,39 +118,46 @@ int main()
             i = 1;
             //rest of the command line arguments
             int tempcount = 0;
-            while (numOfArgs < MAXARGS) {
+            while (numOfArgs < MAXARGS)
+            {
                 token = strtok(NULL, " ");
-                if (token == NULL) {
+                if (token == NULL)
+                {
                     tempcount++;
                 }
                 arglist[i] = token;
                 numOfArgs++;
                 i++;
             }
-            switch (getInput(command)) {
-                case 1:
-                    cd(arglist);
-                    memset(arglist, 0, sizeof(argbuf));
-                    break;
-                case 2:
-                    head = path(arglist, head);
-                    memset(arglist, 0, sizeof(argbuf));
-                    break;
-                case 3:
-                    q = quitShell();
-                    exit(1);
-                    break;
-                default:
-                    if (argbuf[0] == '\n') {
-
-                    } else {
-                        int total = numOfArgs - tempcount;
-                        linCommand(arglist, head, total, thepipe, 0, 0);
-                        close(0);
-                        close(1);
-                        dup2(stdin_cp, 0);
-                        dup2(stdout_cp, 1);
-                    }
+            switch (getInput(command))
+            {
+            case 1:
+                cd(arglist);
+                memset(arglist, 0, sizeof(argbuf));
+                break;
+            case 2:
+                head = path(arglist, head);
+                memset(arglist, 0, sizeof(argbuf));
+                break;
+            case 3:
+                q = quitShell();
+                exit(1);
+                break;
+            default:
+                if (argbuf[0] == '\n')
+                {
+                }
+                else
+                {
+                    int total = numOfArgs - tempcount;
+                    int *thepipe = NULL;
+                    pipeCount = 0;
+                    linCommand(arglist, head, total, pipeCount, thepipe, 0, 0);
+                    close(0);
+                    close(1);
+                    dup2(stdin_cp, 0);
+                    dup2(stdout_cp, 1);
+                }
             }
         }
     }
