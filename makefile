@@ -5,9 +5,13 @@ OBJ = main.o function.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
-proj4: $(OBJ)
+
+proj5: $(OBJ)
+
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 clean:
-    rm -f *.o proj4
+
+	rm -f *.o proj5
+
