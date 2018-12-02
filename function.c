@@ -1,3 +1,4 @@
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -433,3 +434,4 @@ int garbageCollectCommandList(commands_t * commands){
     free(commands->numOfArgs);
     return 0;
 }
+
