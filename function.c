@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -196,7 +195,6 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
         if (head->next == NULL)
         {
             int i;
-            /// @mmeadwell22 Did you intend `` char *command = malloc(ARGLENGTH) `` ?
             char *command = malloc(sizeof(ARGLENGTH));
             if (head->path[strlen(head->path) - 1] == '\n')
             {
@@ -212,6 +210,11 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
                 if (strcmp(arglist[i], ">") == 0 || strcmp(arglist[i], "<") == 0)
                 {
                     list[i] = '\0';
+                    if(arglist[i + 1] == NULL)
+                    {
+                        printf("Missing name for redirect.\n");
+                        goto EXIT;
+                    }
                     break;
                 }
                 list[i] = arglist[i];
@@ -224,11 +227,6 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
         int i;
         for (i = 0; i <= lengthList; i++)
         {
-            /// @mmeadwell22 The, i, variable declaration below (@line229) hides the previous one (declared @line224).
-            /// I am pretty sure, but not certain that you can/should remove @line229.
-            int i;
-
-            /// @mmeadwell22 Did you intend `` char *command = malloc(ARGLENGTH) `` ?
             char *command = malloc(sizeof(ARGLENGTH));
             if (head->path[strlen(head->path) - 1] == '\n')
             {
@@ -244,6 +242,11 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
                 if (strcmp(arglist[i], ">") == 0 || strcmp(arglist[i], "<") == 0)
                 {
                     list[i] = '\0';
+                    if(arglist[i + 1] == NULL)
+                    {
+                        printf("Missing name for redirect.\n");
+                        goto EXIT;
+                    }
                     break;
                 }
                 list[i] = arglist[i];
@@ -253,7 +256,7 @@ int linCommand(char *arglist[], myNode *head, int numOfArgs, int pipeCount, int*
             head = head->next;
         }
         printf("%s: Command not found.\n", arglist[0]);
-        exit(1);
+        EXIT:exit(1);
     }
     else
     {
@@ -446,4 +449,3 @@ int garbageCollectCommandList(commands_t * commands)
     free(commands->numOfArgs);
     return 0;
 }
-
