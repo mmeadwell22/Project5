@@ -97,7 +97,7 @@ int main()
                 linCommand(command_list.command[2], head, command_list.numOfArgs[2], pipeCount, thepipe, 1, 0);
                 close(thepipe[2]);
             }
-            garbageCollectCommandList(&command_list);
+            //garbageCollectCommandList(&command_list);
         }
         else if (pipeCount == -1)               /// Hanging pipe character detected.
         {
